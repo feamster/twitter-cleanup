@@ -1,25 +1,24 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 
-###############################
-# Clean up old tweets with prompting, as opposed to automatically
-# Nick Feamster
-# July 31, 2018
-
+###########################
+## Twitter Cleanup
+## Author: Nick Feamster
+## Date: 31 Jul 2018
+###########################
 
 import tweepy
 import json
 import re
-import datetime
-import dateutil.parser
-import sys
 
 # Fill in these values by creating an app on the Twitter site that has access to your account
-
-user = ""
 consumer_key = ''
 consumer_secret = ''
 access_key = ''
 access_secret = ''
+
+# This is the 'tweet.js' file that you download from the Twitter site
+tweets_js = ''
+likes_js =''
 
 def oauth_login(consumer_key, consumer_secret):
     """Authenticate with twitter using OAuth"""
@@ -35,56 +34,38 @@ auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth)
 print("Authenticated as: %s" % api.me().screen_name)
 
-# This is the 'tweet.js' file that you download from the Twitter site
 
-with open('/Users/feamster/Downloads/twitter-archive-31072018/tweet.js', 'r') as data_file:
+# ### Load Tweets from Downloaded Twitter Archive
+
+with open(tweets_js, 'r') as data_file:
     json_data = data_file.read()
 
 tweets = json.loads(json_data)
+print len(tweets), "tweets loaded"
+#print tweets[10]
 
 
 # ### Mark For Deletion
 
 tweets_marked = []
-
 for tweet in tweets:
     reply = tweet['in_reply_to_screen_name']
     id = tweet['id_str']
     tweet_text = tweet['full_text']
-    tweet_date = dateutil.parser.parse(tweet['created_at']).date()
-   
-    # calculate Tweet age
-    tweet_age = (datetime.date.today() - tweet_date).days
-    #print tweet_date, tweet_age
-
+    
+    # mark replies
     if reply is not None:
-        #print reply, "reply marked for deletion"
-        #tweets_marked.append(id)
-        continue
-
+        print reply, "reply marked for deletion"
+        tweets_marked.append(id)
+        
     # mark RTs
     if re.match(r'^RT', tweet_text):
-        #print tweet_text, "marked for deletion"
-        #tweets_marked.append(id)        
-        continue
+        print tweet_text, "marked for deletion"
+        tweets_marked.append(id)        
+            
 
-    # mark old tweets
-    if tweet_age < (365*1):
-        print tweet_age, "days old", tweet_text
-        delt = sys.stdin.readline()
-        if re.match(r'^y', delt):
-            print "marked for deletion"
-            tweets_marked.append(id)
-        if re.match(r'b', delt):
-            print "breaking"
-            break
-       
-
-
-
-# build list of marked status IDs
 delete_count = 0
-#delete marked tweets by status ID
+# delete marked tweets by status ID
 for status_id in tweets_marked:
     try:
         api.destroy_status(int(status_id))
@@ -95,3 +76,21 @@ for status_id in tweets_marked:
 print(delete_count, 'tweets deleted.')
 
 
+# ### Load Liked Tweet IDs from Downloaded Twitter Archive
+
+# This is the 'tweet.js' file that you download from the Twitter site
+with open(likes_js, 'r') as data_file:
+    json_data = data_file.read()
+
+likes = json.loads(json_data)
+
+
+for tweet_liked in likes:
+    status_id = tweet_liked['like']['tweetId']
+    try:
+        api.destroy_favorite(int(status_id))
+        print(status_id, 'like removed!')
+        delete_count += 1
+    except:
+        print(status_id, 'could not be un-liked.')
+print(delete_count, 'likes removed.')

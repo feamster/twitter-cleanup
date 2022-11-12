@@ -65,6 +65,8 @@ access_secret = credentials['access_secret']
 #############################################################################################
 # MAIN
 
+print("[{}]".format(str(datetime.datetime.now())))
+
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
@@ -109,4 +111,4 @@ for tweet in tweepy.Cursor(api.user_timeline, id=user,
     time.sleep(0.1)
     print('.', end='', flush=True)
 
-print('\n', reply_delete_count, 'replies removed.')
+print('\n{} replies removed.'.format(reply_delete_count))

@@ -54,8 +54,8 @@ def oauth_login(consumer_key, consumer_secret):
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
-api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-print("Authenticated as: %s" % api.me().screen_name)
+api = tweepy.API(auth, wait_on_rate_limit=True)
+#print("Authenticated as: %s" % api.me().screen_name)
 
 #################################################################
 # Step 1: Mark for Deletion
@@ -124,8 +124,8 @@ for status_id in tweets_marked:
         api.destroy_status(int(status_id))
         print(status_id, 'deleted!')
         delete_count += 1
-    except tweepy.error.TweepError as e:
-        print(status_id, 'could not be deleted: ', e.reason)
+    except tweepy.errors.TweepyException as e:
+        print(status_id, 'could not be deleted')
 print(delete_count, 'tweets deleted.')
 
 
